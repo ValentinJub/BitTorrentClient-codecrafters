@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/decoder"
+	"github.com/codecrafters-io/bittorrent-starter-go/encoder"
 	"github.com/codecrafters-io/bittorrent-starter-go/utils"
 )
 
@@ -49,12 +50,23 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			fmt.Println("No tracker URL found")
 			return
 		}
-		length, ok := decoded["info"].(map[string]interface{})["length"].(int)
+		info, ok := decoded["info"].(map[string]interface{})
+		if !ok {
+			fmt.Println("No info found")
+			return
+		}
+		infoBencoded, err := encoder.EncodeBencode(info)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		infoHash := utils.SHA1Hash([]byte(infoBencoded))
+		length, ok := info["length"].(int)
 		if !ok {
 			fmt.Println("No length found")
 			return
 		}
-		fmt.Printf("Tracker URL: %s\nLength: %d\n", URL, length)
+		fmt.Printf("Tracker URL: %s\nLength: %d\nInfo Hash: %s", URL, length, infoHash)
 	default:
 		fmt.Println("Unknown command: " + command)
 	}

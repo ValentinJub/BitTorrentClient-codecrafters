@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"os"
@@ -20,4 +21,10 @@ func ReadFile(file string) (*bytes.Buffer, error) {
 		return new(bytes.Buffer), fmt.Errorf("error while reading from the file: %s", err)
 	}
 	return b, nil
+}
+
+func SHA1Hash(data []byte) string {
+	hash := sha1.New()
+	hash.Write(data)
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }
