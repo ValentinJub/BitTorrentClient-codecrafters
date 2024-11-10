@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"unicode"
 )
 
 const ErrUnsupportedBencodeType = "unsupported bencode type"
@@ -13,15 +12,17 @@ const ErrUnsupportedBencodeType = "unsupported bencode type"
 // - 5:hello -> hello
 // - 10:hello12345 -> hello12345
 func DecodeBencode(bencodedString string) (interface{}, int, error) {
-	if unicode.IsDigit(rune(bencodedString[0])) {
-		return decodeString(bencodedString)
-	} else if bencodedString[0] == 'i' {
+	first := bencodedString[0]
+	switch {
+	case first == 'i':
 		return decodeInteger(bencodedString)
-	} else if bencodedString[0] == 'l' {
+	case first == 'l':
 		return decodeList(bencodedString)
-		// } else if bencodedString[0] == 'd' {
-		// 	return decodeDictionary(bencodedString)
-	} else {
+	case first == 'd':
+		return decodeDictionary(bencodedString)
+	case first >= '0' && first <= '9':
+		return decodeString(bencodedString)
+	default:
 		return "", 0, fmt.Errorf(ErrUnsupportedBencodeType)
 	}
 }
@@ -49,7 +50,7 @@ func decodeString(bencodedString string) (value string, bytesRead int, err error
 }
 
 // Decode a bencoded string into an integer value, returning the value, the number of bytes read, and an error if any
-func decodeInteger(bencodedString string) (value, length int, err error) {
+func decodeInteger(bencodedString string) (value, bytesRead int, err error) {
 	integerRegex := regexp.MustCompile(`^i(-?\d+)e`)
 	matches := integerRegex.FindStringSubmatch(bencodedString)
 	if len(matches) == 0 {
@@ -63,7 +64,7 @@ func decodeInteger(bencodedString string) (value, length int, err error) {
 }
 
 // Decode a bencoded string into a list value, returning the value, the number of bytes read, and an error if any
-func decodeList(bencodedString string) (values []interface{}, length int, err error) {
+func decodeList(bencodedString string) (values []interface{}, bytesRead int, err error) {
 	var list []interface{}
 	if bencodedString[0] != 'l' {
 		return nil, 0, fmt.Errorf("invalid list format")
@@ -76,11 +77,30 @@ func decodeList(bencodedString string) (values []interface{}, length int, err er
 		}
 		list = append(list, element)
 		bencodedString = bencodedString[elementLength:]
-		length += elementLength
+		bytesRead += elementLength
 	}
-	return list, length + 2, nil
+	return list, bytesRead + 2, nil
 }
 
-// func decodeDictionary(bencodedString string) (values map[string]interface{}, length int, err error) {
-// 	return map[string]interface{}{}, 0, nil
-// }
+// Decode a bencoded string into a dictionary value, returning the value, the number of bytes read, and an error if any
+func decodeDictionary(bencodedString string) (values map[string]interface{}, bytesRead int, err error) {
+	dict := make(map[string]interface{})
+	if bencodedString[0] != 'd' {
+		return nil, 0, fmt.Errorf("invalid dictionary format")
+	}
+	bencodedString = bencodedString[1:]
+	for len(bencodedString) > 0 && bencodedString[0] != 'e' {
+		key, keyLength, err := DecodeBencode(bencodedString)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error decoding dict key: %v", err)
+		}
+		value, valueLength, err := DecodeBencode(bencodedString[keyLength:])
+		if err != nil {
+			return nil, 0, fmt.Errorf("error decoding dict value: %v", err)
+		}
+		bencodedString = bencodedString[keyLength+valueLength:]
+		dict[key.(string)] = value
+		bytesRead += keyLength + valueLength
+	}
+	return dict, bytesRead + 2, nil
+}

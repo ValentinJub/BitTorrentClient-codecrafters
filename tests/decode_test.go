@@ -37,6 +37,13 @@ var DecodeBencodeTests = []struct {
 		expectedError:  nil,
 	},
 	{
+		description:    "Decode dictionary",
+		input:          "d3:onei1e3:twoi2ee",
+		expectedValue:  map[string]interface{}{"one": 1, "two": 2},
+		expectedLength: 18,
+		expectedError:  nil,
+	},
+	{
 		description: "Decode nested list",
 		input:       "l3:one3:twoi3el3:one3:twoi3eee",
 		expectedValue: []interface{}{
