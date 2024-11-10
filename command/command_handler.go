@@ -66,7 +66,25 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			fmt.Println("No length found")
 			return
 		}
-		fmt.Printf("Tracker URL: %s\nLength: %d\nInfo Hash: %s", URL, length, infoHash)
+		pieceLength, ok := info["piece length"].(int)
+		if !ok {
+			fmt.Println("No piece length found")
+			return
+		}
+		pieces, ok := info["pieces"].(string)
+		if !ok {
+			fmt.Println("No pieces found")
+			return
+		}
+		pieceHashes := ""
+		for i := 0; i < len(pieces); i += 20 {
+			if i+20 > len(pieces) {
+				fmt.Println("Invalid pieces length")
+				return
+			}
+			pieceHashes += fmt.Sprintf("%x\n", pieces[i:i+20])
+		}
+		fmt.Printf("Tracker URL: %s\nLength: %d\nInfo Hash: %s\nPiece Length: %d\nPiece Hashes:\n%s", URL, length, infoHash, pieceLength, pieceHashes)
 	default:
 		fmt.Println("Unknown command: " + command)
 	}
