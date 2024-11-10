@@ -104,3 +104,8 @@ func decodeDictionary(bencodedString string) (values map[string]interface{}, byt
 	}
 	return dict, bytesRead + 2, nil
 }
+
+// A Torrent file is a bencoded dictionary containing information about the torrent
+func DecodeTorrentFile(fileContent string) (values map[string]interface{}, bytesRead int, err error) {
+	return decodeDictionary(fileContent)
+}

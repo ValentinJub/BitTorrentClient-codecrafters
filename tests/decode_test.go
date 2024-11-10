@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/decoder"
+	"github.com/codecrafters-io/bittorrent-starter-go/utils"
 )
 
 var DecodeBencodeTests = []struct {
@@ -84,4 +85,31 @@ func TestDecodeBencode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDecodeTorrentFile(t *testing.T) {
+	t.Run("Decode torrent file", func(t *testing.T) {
+		// The file is at the root of the project
+		fileContent, err := utils.ReadFile("../sample.torrent")
+		if err != nil {
+			t.Errorf("unable to open the sample torrent file: %v", err)
+		}
+		decoded, _, err := decoder.DecodeTorrentFile(fileContent.String())
+		if err != nil {
+			t.Errorf("Expected error to be nil, got %v", err)
+		}
+		expected := map[string]interface{}{
+			"announce": "http://bittorrent-test-tracker.codecrafters.io/announce",
+			"info": map[string]interface{}{
+				"length": 92063,
+			},
+		}
+		// Check that decoded contains the expected values
+		if expected["announce"] != decoded["announce"] {
+			t.Errorf("Expected announce to be %v, got %v", expected["announce"], decoded["announce"])
+		}
+		if expected["info"].(map[string]interface{})["length"] != decoded["info"].(map[string]interface{})["length"] {
+			t.Errorf("Expected length to be %v, got %v", expected["info"].(map[string]interface{})["length"], decoded["info"].(map[string]interface{})["length"])
+		}
+	})
 }
