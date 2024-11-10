@@ -94,7 +94,7 @@ func TestDecodeTorrentFile(t *testing.T) {
 		if err != nil {
 			t.Errorf("unable to open the sample torrent file: %v", err)
 		}
-		decoded, _, err := decoder.DecodeTorrentFile(fileContent.String())
+		torrent, _, err := decoder.DecodeTorrentFile(fileContent.String())
 		if err != nil {
 			t.Errorf("Expected error to be nil, got %v", err)
 		}
@@ -105,11 +105,11 @@ func TestDecodeTorrentFile(t *testing.T) {
 			},
 		}
 		// Check that decoded contains the expected values
-		if expected["announce"] != decoded["announce"] {
-			t.Errorf("Expected announce to be %v, got %v", expected["announce"], decoded["announce"])
+		if expected["announce"] != torrent.Announce {
+			t.Errorf("Expected announce to be %v, got %v", expected["announce"], torrent.Announce)
 		}
-		if expected["info"].(map[string]interface{})["length"] != decoded["info"].(map[string]interface{})["length"] {
-			t.Errorf("Expected length to be %v, got %v", expected["info"].(map[string]interface{})["length"], decoded["info"].(map[string]interface{})["length"])
+		if expected["info"].(map[string]interface{})["length"] != torrent.Length {
+			t.Errorf("Expected length to be %v, got %v", expected["info"].(map[string]interface{})["length"], torrent.Length)
 		}
 	})
 }

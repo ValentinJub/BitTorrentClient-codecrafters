@@ -26,5 +26,5 @@ func ReadFile(file string) (*bytes.Buffer, error) {
 func SHA1Hash(data []byte) string {
 	hash := sha1.New()
 	hash.Write(data)
-	return fmt.Sprintf("%x", hash.Sum(nil))
+	return fmt.Sprintf("%s", hash.Sum(nil))
 }
