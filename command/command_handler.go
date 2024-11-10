@@ -19,10 +19,16 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 	switch command {
 	case "decode":
 		Decode(args[0])
-	case "peers":
-		Peers(args[0])
+	case "handshake":
+		if len(args) < 2 {
+			fmt.Println("Usage: mybittorrent handshake <torrent.file> <peer_ip:port>")
+			return
+		}
+		Handshake(args[0], args[1])
 	case "info":
 		Info(args[0])
+	case "peers":
+		Peers(args[0])
 	default:
 		fmt.Println("Unknown command: " + command)
 	}

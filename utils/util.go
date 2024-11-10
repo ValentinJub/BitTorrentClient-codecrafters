@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 )
 
@@ -26,5 +27,18 @@ func ReadFile(file string) (*bytes.Buffer, error) {
 func SHA1Hash(data []byte) string {
 	hash := sha1.New()
 	hash.Write(data)
-	return fmt.Sprintf("%s", hash.Sum(nil))
+	return string(hash.Sum(nil))
+}
+
+func GeneratePeerID() string {
+	return "-PC0001-" + RandStringBytes(12)
+}
+
+func RandStringBytes(n int) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
