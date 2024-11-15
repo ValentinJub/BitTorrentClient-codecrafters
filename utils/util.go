@@ -24,6 +24,19 @@ func ReadFile(file string) (*bytes.Buffer, error) {
 	return b, nil
 }
 
+func WriteFile(file string, data []byte) error {
+	fileHandle, err := os.Create(file)
+	if err != nil {
+		return fmt.Errorf("unable to create %s\nError: %s", file, err)
+	}
+	defer fileHandle.Close()
+	_, err = fileHandle.Write(data)
+	if err != nil {
+		return fmt.Errorf("error while writing to the file: %s", err)
+	}
+	return nil
+}
+
 func SHA1Hash(data []byte) string {
 	hash := sha1.New()
 	hash.Write(data)
