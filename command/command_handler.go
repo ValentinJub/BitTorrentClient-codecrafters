@@ -25,6 +25,32 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 	// $ ./your_bittorrent.sh decode d3:foo3:bar5:helloi52ee
 	case "decode":
 		Decode(args[0])
+	// $ ./your_bittorrent.sh download -o /tmp/test.txt sample.torrent
+	case "download":
+		if len(args) < 3 {
+			fmt.Println("Usage: mybittorrent download -o <output_dir> <torrent.file>")
+			return
+		}
+		// Get the torrent file information
+		torrentFile := args[2]
+		torrent, err := OpenTorrentFile(torrentFile)
+		if err != nil {
+			fmt.Println("Error while opening torrent file: ", err)
+			return
+		}
+		// Get the list of peers from the tracker
+		peers, err := Peers(torrent.Announce, torrent.InfoHash, torrent.Length)
+		if err != nil {
+			return
+		}
+		outputFile := args[1]
+		// for debugging
+		fmt.Print(torrent.String())
+		err = Download(torrent, peers, outputFile)
+		if err != nil {
+			fmt.Println("Error while downloading torrent: ", err)
+			return
+		}
 	// $ ./your_bittorrent.sh download_piece -o <output_dir> <torrent.file> <piece_index>
 	// example:
 	// $ ./your_bittorrent.sh download_piece -o output sample.torrent 0
@@ -52,14 +78,18 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 		if err != nil {
 			return
 		}
-		outputDir := args[1]
-		piece, err := DownloadPiece(peers[0], torrent, pieceIndex)
+		outputFile := args[1]
+		last := false
+		if pieceIndex == len(torrent.PieceHashes)-1 {
+			last = true
+		}
+		piece, err := DownloadPiece(peers[0], torrent.Length, torrent.PieceLength, torrent.InfoHash, torrent.PieceHashes[pieceIndex], pieceIndex, last)
 		if err != nil {
 			fmt.Println("Error while downloading piece: ", err)
 			return
 		}
 		// Write the piece to the output file
-		err = utils.WriteFile(outputDir, piece)
+		err = utils.WriteFile(outputFile, piece)
 		if err != nil {
 			fmt.Println("Error while writing piece to file: ", err)
 		}
@@ -75,7 +105,11 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			fmt.Println("Error while opening torrent file: ", err)
 			return
 		}
-		Handshake(torrentFile.InfoHash, peerAddr)
+		_, err = Handshake(torrentFile.InfoHash, peerAddr)
+		if err != nil {
+			fmt.Println("Error while handshaking with peer: ", err)
+			return
+		}
 	// $ ./your_bittorrent.sh info sample.torrent
 	case "info":
 		if len(args) < 1 {
@@ -83,6 +117,7 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			return
 		}
 		torrentFile := args[0]
+		// Print the torrent file information to pass the test
 		fmt.Print(Info(torrentFile))
 	// $ ./your_bittorrent.sh peers sample.torrent
 	case "peers":
@@ -101,7 +136,7 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			fmt.Println("Error while getting peers: ", err)
 			return
 		}
-		// Print the peers
+		// Print the peers to pass the test
 		for _, peer := range peers {
 			fmt.Println(peer)
 		}
