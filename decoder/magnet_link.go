@@ -1,6 +1,7 @@
 package decoder
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strings"
@@ -43,7 +44,11 @@ func ParseMagnetLink(magnetLink string) (*MagnetLink, error) {
 	if n == -1 {
 		return nil, fmt.Errorf("error while parsing magnet link, could not find info hash")
 	}
-	infoHash := magnetLink[n+len(xt) : n+len(xt)+40]
+	infoHashStr := magnetLink[n+len(xt) : n+len(xt)+40]
+	infoHash, err := hex.DecodeString(infoHashStr)
+	if err != nil {
+		return nil, fmt.Errorf("error while decoding info hash: %v", err)
+	}
 
 	displayName := ""
 	n = strings.Index(magnetLink, dn)
@@ -73,7 +78,7 @@ func ParseMagnetLink(magnetLink string) (*MagnetLink, error) {
 		tracker, _ = decodeURL(tracker)
 	}
 
-	return NewMagnetLink(infoHash, displayName, tracker), nil
+	return NewMagnetLink(string(infoHash), displayName, tracker), nil
 }
 
 func decodeURL(addr string) (string, error) {

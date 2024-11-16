@@ -77,7 +77,7 @@ func DownloadPiece(peerAddr string, torrentLength, torrentPieceLength int, torre
 // If the peer is ready, we return the connection to the peer
 func helloPeer(torrentInfoHash string, peerAddr string) (net.Conn, error) {
 	// Connect to the peer
-	conn, err := Handshake(torrentInfoHash, peerAddr)
+	conn, err := Handshake(torrentInfoHash, peerAddr, false)
 	if err != nil {
 		return nil, fmt.Errorf("error while handshaking with peer: %v", err)
 	}

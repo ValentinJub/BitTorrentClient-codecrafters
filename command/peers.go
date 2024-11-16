@@ -31,6 +31,7 @@ func Peers(announceURL, torrentInfoHash string, torrentLength int) ([]string, er
 	if err != nil {
 		return []string{}, fmt.Errorf("error while decoding the response: %s", err.Error())
 	}
+	fmt.Printf("Decoded: %v\n", decoded)
 	switch decoded.(type) {
 	case map[string]interface{}:
 		peers := decoded.(map[string]interface{})["peers"].(string)

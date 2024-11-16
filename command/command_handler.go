@@ -105,7 +105,7 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			fmt.Println("Error while opening torrent file: ", err)
 			return
 		}
-		_, err = Handshake(torrentFile.InfoHash, peerAddr)
+		_, err = Handshake(torrentFile.InfoHash, peerAddr, false)
 		if err != nil {
 			fmt.Println("Error while handshaking with peer: ", err)
 			return
@@ -119,6 +119,35 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 		torrentFile := args[0]
 		// Print the torrent file information to pass the test
 		fmt.Print(Info(torrentFile))
+	// $ ./your_bittorrent.sh magnet_handshake <magnet_link>
+	case "magnet_handshake":
+		if len(args) < 1 {
+			fmt.Println("Usage: mybittorrent magnet_handshake <torrent.file> <peer_ip:port>")
+			return
+		}
+		magnetLink := args[0]
+		magnet, err := MagnetParse(magnetLink)
+		if err != nil {
+			fmt.Println("Error while parsing magnet link: ", err)
+			return
+		}
+		// Decode the info hash from hex to decimal
+		// infoHash, err := hex.DecodeString(magnet.InfoHash)
+		// if err != nil {
+		// 	fmt.Println("Error while decoding info hash: ", err)
+		// 	return
+		// }
+		// fmt.Printf("Info hash converted: %s\n", string(infoHash))
+		peers, err := Peers(magnet.Tracker, magnet.InfoHash, 1996) // Passing an arbitrary length > 0
+		if err != nil {
+			fmt.Println("Error while getting peers: ", err)
+			return
+		}
+		_, err = Handshake(magnet.InfoHash, peers[0], true)
+		if err != nil {
+			fmt.Println("Error while handshaking with peer: ", err)
+			return
+		}
 	// $ ./your_bittorrent.sh magnet_parse <magnet_link>
 	case "magnet_parse":
 		if len(args) < 1 {
@@ -132,7 +161,7 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 			return
 		}
 		// Print the magnet link to pass the test
-		fmt.Printf("Tracker URL: %s\nInfo Hash: %s\n", magnet.Tracker, magnet.InfoHash)
+		fmt.Printf("Tracker URL: %s\nInfo Hash: %x\n", magnet.Tracker, magnet.InfoHash)
 	// $ ./your_bittorrent.sh peers sample.torrent
 	case "peers":
 		if len(args) < 1 {
