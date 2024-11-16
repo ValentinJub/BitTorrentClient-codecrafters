@@ -119,6 +119,20 @@ func (c *CommandHandlerImpl) HandleCommand(command string, args []string) {
 		torrentFile := args[0]
 		// Print the torrent file information to pass the test
 		fmt.Print(Info(torrentFile))
+	// $ ./your_bittorrent.sh magnet_parse <magnet_link>
+	case "magnet_parse":
+		if len(args) < 1 {
+			fmt.Println("Usage: mybittorrent magnet_parse <magnet_link>")
+			return
+		}
+		magnetLink := args[0]
+		magnet, err := MagnetParse(magnetLink)
+		if err != nil {
+			fmt.Println("Error while parsing magnet link: ", err)
+			return
+		}
+		// Print the magnet link to pass the test
+		fmt.Printf("Tracker URL: %s\nInfo Hash: %s\n", magnet.Tracker, magnet.InfoHash)
 	// $ ./your_bittorrent.sh peers sample.torrent
 	case "peers":
 		if len(args) < 1 {
